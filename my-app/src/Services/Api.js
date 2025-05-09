@@ -32,6 +32,8 @@ export const searchMovies = async (query, page = 1) => {
   }
 };
 
+
+
 export const fetchMovieDetails = async (movieId) => {
   try {
     const response = await fetch(
