@@ -1,12 +1,12 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { fetchTrendingMovies, searchMovies } from '../Services/Api'; // Updated to match previous JS API module
+import { fetchTrendingMovies, searchMovies } from '../Services/Api';
 
 const MovieContext = createContext(undefined);
 
 export const useMovies = () => {
   const context = useContext(MovieContext);
   if (!context) {
-    throw new Error('useMovies must be used within a MovieProvider');
+    throw new Error('use Movies must be used within a MovieProvider');
   }
   return context;
 };
@@ -34,7 +34,7 @@ export const MovieProvider = ({ children }) => {
     localStorage.setItem('favorites', JSON.stringify(favorites));
   }, [favorites]);
 
-  // Load last search on mount
+  // Load last search from localStorage on mount
   useEffect(() => {
     const lastSearch = localStorage.getItem('lastSearch');
     if (lastSearch) {
@@ -43,22 +43,23 @@ export const MovieProvider = ({ children }) => {
     }
   }, []);
 
-  const fetchTrending = async (page = 1) => {
+  const fetchTrendingMoviesData = async (page = 1) => {
     try {
       setLoading(true);
       setError(null);
-      const results = await fetchTrendingMovies(page);
+
+      const response = await fetchTrendingMovies(page);
 
       if (page === 1) {
-        setTrendingMovies(results);
+        setTrendingMovies(response.results);
       } else {
-        setTrendingMovies(prev => [...prev, ...results]);
+        setTrendingMovies(prev => [...prev, ...response.results]);
       }
 
-      setCurrentPage(page);
-      setTotalPages(10); // TMDb free API doesn't return total pages with `/trending`
+      setCurrentPage(response.page);
+      setTotalPages(response.total_pages);
     } catch (err) {
-      console.error(err);
+      console.error('Failed to fetch trending movies:', err);
       setError('Failed to fetch trending movies. Please try again.');
     } finally {
       setLoading(false);
@@ -89,7 +90,7 @@ export const MovieProvider = ({ children }) => {
 
       localStorage.setItem('lastSearch', query);
     } catch (err) {
-      console.error(err);
+      console.error('Failed to search movies:', err);
       setError('Failed to search movies. Please try again.');
     } finally {
       setLoading(false);
@@ -121,7 +122,7 @@ export const MovieProvider = ({ children }) => {
         searchQuery,
         currentPage,
         totalPages,
-        fetchTrendingMovies: fetchTrending,
+        fetchTrendingMovies: fetchTrendingMoviesData,
         searchForMovies,
         addToFavorites,
         removeFromFavorites,
