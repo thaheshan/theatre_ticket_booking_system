@@ -1,35 +1,47 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import { Search, Film } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { fetchTrendingMovies } from '../Services/Api';
-
-import MovieGrid from '../Components/Movies/MovieGrid';
+import MovieGrid from '../Components//Movies/MovieGrid';
 
 const HomePage = () => {
   const [trendingMovies, setTrendingMovies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [error, setError] = useState(null);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
   const heroRef = useRef(null);
   const navigate = useNavigate();
 
+  // Fetch trending movies
   useEffect(() => {
     const loadTrendingMovies = async () => {
       try {
         setLoading(true);
-        const movies = await fetchTrendingMovies();
-        setTrendingMovies(movies || []);
-      } catch (error) {
-        console.error('Error fetching trending movies:', error);
-        setTrendingMovies([]);
+        setError(null);
+        const data = await fetchTrendingMovies(currentPage);
+        if (data && data.results) {
+          setTrendingMovies(prev => [...prev, ...data.results]);
+          setTotalPages(data.total_pages || 1);
+        } else {
+          setError('No movies found.');
+        }
+      } catch (err) {
+        console.error('Error fetching trending movies:', err);
+        setError('Failed to fetch trending movies.');
       } finally {
         setLoading(false);
       }
     };
 
     loadTrendingMovies();
-  }, []);
+  }, [currentPage]);
 
+  // Scroll parallax effect
   useEffect(() => {
     const handleScroll = () => {
       if (heroRef.current) {
@@ -48,6 +60,12 @@ const HomePage = () => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/search/${encodeURIComponent(searchQuery)}`);
+    }
+  };
+
+  const handleLoadMore = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(prev => prev + 1);
     }
   };
 
@@ -112,20 +130,29 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* Trending Movies Section */}
-      <div className="relative z-10 bg-gradient-to-b from-gray-900 to-black">
-        <div className="max-w-7xl mx-auto px-4 py-20">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-8 flex items-center">
-            <span className="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-              Trending Movies
-            </span>
-          </h2>
+      <div className="container mx-auto px-4 py-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true }}
+        >
+          <div className="flex items-center space-x-2 mb-8">
+            <Film size={24} className="text-black dark:text-white" />
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Trending Now
+            </h2>
+          </div>
 
           <MovieGrid
-            movies={trendingMovies}
+            movies={trendingMovies.slice(1)}
             loading={loading}
+            onLoadMore={handleLoadMore}
+            error={error}
+            hasMore={currentPage < totalPages}
+            emptyMessage="No trending movies available at the moment. Please check back later."
           />
-        </div>
+        </motion.div>
       </div>
     </div>
   );
