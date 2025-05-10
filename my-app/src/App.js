@@ -1,12 +1,13 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { MovieProvider } from './Context/MovieContext';
-// Context Providers
-import { AuthProvider, useAuth } from './Context/Authcontext';
-import { ThemeProvider } from './Context/Themecontext';
-import { FavoritesProvider } from './Context/Favouritecontext';
 
-// Components
+// Context Providers
+import { ThemeProvider } from './Context/Themecontext';
+import { AuthProvider, useAuth } from './Context/Authcontext';
+import { MovieProvider } from './Context/MovieContext';
+import { FavoritesProvider } from './Context/Favouritecontext'; 
+
+// Layout Components
 import Header from './Components/Layout/Header';
 import Footer from './Components/Layout/Footer';
 import LoginForm from './Components/Layout/Loginform';
@@ -17,13 +18,13 @@ import SearchPage from './Pages/Searchpage';
 import MovieDetails from './Components/Movies/MovieDetails';
 import FavoritesPage from './Pages/Favouritespage';
 
-// Protected Route Component
+// 🔐 Protected Route wrapper
 const ProtectedRoute = ({ element }) => {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? element : <Navigate to="/login" replace />;
 };
 
-// Main App Component
+// 🎬 Main App Content
 const AppContent = () => {
   const { isAuthenticated } = useAuth();
 
@@ -33,7 +34,7 @@ const AppContent = () => {
 
   return (
     <Router>
-      <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+      <div className="flex flex-col min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white transition-colors duration-200">
         {isAuthenticated && <Header />}
         <main className="flex-grow">
           <Routes>
@@ -54,8 +55,8 @@ const AppContent = () => {
   );
 };
 
-// Root App with Providers
-function App() {
+// 🌍 Root App with All Providers
+const App = () => {
   return (
     <ThemeProvider>
       <AuthProvider>
@@ -67,6 +68,6 @@ function App() {
       </AuthProvider>
     </ThemeProvider>
   );
-}
+};
 
 export default App;
