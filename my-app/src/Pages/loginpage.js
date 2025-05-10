@@ -30,7 +30,7 @@ const LoginPage = () => {
           Welcome to Movie Explorer
         </h1>
         <p className="mt-2 text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-          Discover trending movies, search for your favorites, and keep track of what you want to watch.
+          Discover trending movies, search for your favorites, and keep track of what you want to Watch!.
         </p>
       </motion.div>
 

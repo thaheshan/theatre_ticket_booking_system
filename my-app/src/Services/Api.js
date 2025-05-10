@@ -1,3 +1,4 @@
+// api.js
 import axios from 'axios';
 
 // ✅ TMDb API Config
@@ -26,7 +27,7 @@ export const fetchTrendingMovies = async (page = 1) => {
     return response.data;
   } catch (error) {
     console.error('Error fetching trending movies:', error);
-    throw new Error('Failed to fetch trending movies');
+    return { results: [], total_pages: 0, total_results: 0, page: 1 };
   }
 };
 
@@ -39,16 +40,15 @@ export const searchMovies = async (query, page = 1) => {
     return response.data;
   } catch (error) {
     console.error('Error searching movies:', error);
-    throw new Error('Failed to search movies');
+    return { results: [], total_pages: 0, total_results: 0, page: 1 };
   }
 };
 
-// ✅ Fetch movie details by ID
 export const fetchMovieDetails = async (id) => {
   try {
     const response = await api.get(`/movie/${id}`, {
       params: {
-        append_to_response: 'videos,credits', // Append additional info like videos and credits
+        append_to_response: 'videos,credits',
       },
     });
     return response.data;
@@ -58,6 +58,7 @@ export const fetchMovieDetails = async (id) => {
   }
 };
 
+
 // ✅ Fetch all genres
 export const fetchGenres = async () => {
   try {
@@ -65,7 +66,7 @@ export const fetchGenres = async () => {
     return response.data.genres;
   } catch (error) {
     console.error('Error fetching genres:', error);
-    throw new Error('Failed to fetch genres');
+    return [];
   }
 };
 
@@ -81,6 +82,6 @@ export const fetchMoviesByGenre = async (genreId, page = 1) => {
     return response.data;
   } catch (error) {
     console.error('Error fetching movies by genre:', error);
-    throw new Error('Failed to fetch movies by genre');
+    return { results: [], total_pages: 0, total_results: 0, page: 1 };
   }
 };

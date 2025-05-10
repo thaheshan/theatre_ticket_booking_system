@@ -10,6 +10,7 @@ import { Loader } from 'lucide-react';
  * @param {string|null} props.error
  * @param {boolean} props.hasMore
  * @param {Function} props.onLoadMore
+ * @param {Function} props.onMovieClick
  * @param {string} [props.emptyMessage]
  */
 const MovieGrid = ({
@@ -18,6 +19,7 @@ const MovieGrid = ({
   error,
   hasMore,
   onLoadMore,
+  onMovieClick,
   emptyMessage = 'No movies found',
 }) => {
   const observer = useRef(null);
@@ -47,6 +49,7 @@ const MovieGrid = ({
     };
   }, []);
 
+  // Error message if there was an issue fetching the movies
   if (error) {
     return (
       <motion.div 
@@ -59,6 +62,7 @@ const MovieGrid = ({
     );
   }
 
+  // Empty message when no movies are available
   if (!loading && movies.length === 0) {
     return (
       <motion.div
@@ -82,11 +86,14 @@ const MovieGrid = ({
             transition={{ duration: 0.5, delay: index * 0.1 }}
             viewport={{ once: true, margin: "-100px" }}
           >
-            <MovieCard movie={movie} />
+            <div onClick={() => onMovieClick(movie.id)} className="cursor-pointer">
+              <MovieCard movie={movie} />
+            </div>
           </motion.div>
         ))}
       </motion.div>
 
+      {/* Loading more indicator */}
       {(loading || hasMore) && (
         <div ref={loadMoreRef} className="flex justify-center items-center py-8">
           {loading && (
