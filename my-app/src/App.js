@@ -52,10 +52,10 @@ const AppContent = () => {
               path="/search/:query" 
               element={<ProtectedRoute element={<SearchPage />} />} 
             />
-            <Route 
-              path="/movie/:id" 
-              element={<ProtectedRoute element={<MovieDetails />} />} 
-            />
+        <Route 
+  path="/movie/:id" 
+  element={<ProtectedRoute element={<MovieDetails />} />} 
+/>
             <Route 
               path="/favorites" 
               element={<ProtectedRoute element={<FavoritesPage />} />} 
