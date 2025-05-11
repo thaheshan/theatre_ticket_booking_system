@@ -12,13 +12,14 @@ const Footer = () => {
           
           <div className="flex items-center">
             <span className="text-gray-600 dark:text-gray-400 flex items-center">
-              Made with <Heart size={16} className="mx-1 text-gray-900 dark:text-white" /> 
+              Made by Thaheshan
+              with <Heart className="w-4 h-4 text-red-500 ml-1" />
               using TMDb API
             </span>
           </div>
           
           <div className="mt-4 md:mt-0 text-sm text-gray-500 dark:text-gray-500">
-            This product uses the TMDb API but is not endorsed or certified by TMDb.
+            This product uses the TMDb API but is not certified by TMDb.
           </div>
         </div>
       </div>

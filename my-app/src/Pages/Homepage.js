@@ -107,7 +107,7 @@ const HomePage = () => {
 
           <p className="text-xl md:text-2xl text-gray-700 dark:text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
             Explore thousands of movies, from timeless classics to the latest blockbusters.
-            Your next cinematic journey begins here.
+            Your next cinematic journey begins here!
           </p>
 
           <form
