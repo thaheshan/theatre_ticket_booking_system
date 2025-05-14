@@ -14,7 +14,7 @@ const api = axios.create({
 });
 
 // ✅ Utility: Get full image URL
-export const getImgUrl = (path, size = 'w500') => {
+export const getImageUrl = (path, size = 'w500') => {
   if (!path) return 'https://via.placeholder.com/500x750?text=No+Image+Available';
   return `https://image.tmdb.org/t/p/${size}${path}`;
 };
@@ -82,7 +82,7 @@ export const fetchMovieDetails = async (id) => {
 };
 
 // ✅ Fetch all genres
-export const fetchGenres = async () => {
+export const getGenres = async () => {
   try {
     const response = await api.get('/genre/movie/list');
     return response.data.genres;

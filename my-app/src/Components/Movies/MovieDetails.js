@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Heart, Star, Calendar, Clock, Users, MessageSquare } from 'lucide-react';
 import { useMovies } from '../../Context/MovieContext';
-import { useAuth } from '../../Context/AuthContext';
+import { useAuth } from '../../Context/Authcontext';
 import { fetchMovieDetails, getImageUrl } from '../../Services/Api';
 
 const CastMember = ({ cast }) => (
