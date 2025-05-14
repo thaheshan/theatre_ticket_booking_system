@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Film } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { fetchTrendingMovies } from '../Services/Api';
+import { fetchTrendingMovies, searchMovies } from '../Services/Api';
 import MovieGrid from '../Components/Movies/MovieGrid';
 
 const HomePage = () => {
@@ -13,10 +13,12 @@ const HomePage = () => {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [isSearching, setIsSearching] = useState(false);
 
   const heroRef = useRef(null);
   const navigate = useNavigate();
 
+  // Load Trending Movies
   useEffect(() => {
     const loadTrendingMovies = async () => {
       try {
@@ -24,7 +26,9 @@ const HomePage = () => {
         setError(null);
         const data = await fetchTrendingMovies(currentPage);
         if (data && data.results) {
-          setTrendingMovies((prev) => [...prev, ...data.results]);
+          setTrendingMovies((prev) =>
+            currentPage === 1 ? data.results : [...prev, ...data.results]
+          );
           setTotalPages(data.total_pages || 1);
         } else {
           setError('No movies found.');
@@ -37,9 +41,12 @@ const HomePage = () => {
       }
     };
 
-    loadTrendingMovies();
-  }, [currentPage]);
+    if (!isSearching) {
+      loadTrendingMovies();
+    }
+  }, [currentPage, isSearching]);
 
+  // Scroll Progress Effect
   useEffect(() => {
     const handleScroll = () => {
       if (heroRef.current) {
@@ -54,16 +61,51 @@ const HomePage = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleSearch = (e) => {
+  // Search Handler
+  const handleSearch = async (e) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/search/${encodeURIComponent(searchQuery)}`);
+    if (!searchQuery.trim()) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+      setIsSearching(true);
+      const data = await searchMovies(searchQuery, 1);
+
+      if (data && data.results) {
+        setTrendingMovies(data.results);
+        setTotalPages(data.total_pages || 1);
+        setCurrentPage(1);
+      } else {
+        setTrendingMovies([]);
+        setError('No movies found.');
+      }
+    } catch (err) {
+      console.error('Error searching movies:', err);
+      setError('Failed to search movies.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleLoadMore = () => {
+  const handleLoadMore = async () => {
     if (currentPage < totalPages) {
-      setCurrentPage((prev) => prev + 1);
+      const nextPage = currentPage + 1;
+      setCurrentPage(nextPage);
+
+      if (isSearching) {
+        try {
+          setLoading(true);
+          const data = await searchMovies(searchQuery, nextPage);
+          if (data && data.results) {
+            setTrendingMovies((prev) => [...prev, ...data.results]);
+          }
+        } catch (err) {
+          console.error('Error loading more search results:', err);
+        } finally {
+          setLoading(false);
+        }
+      }
     }
   };
 
@@ -118,7 +160,13 @@ const HomePage = () => {
               type="text"
               placeholder="Search for movies..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                if (e.target.value === '') {
+                  setIsSearching(false);
+                  setCurrentPage(1);
+                }
+              }}
               className="w-full py-6 px-8 pl-16 rounded-full text-lg text-gray-900 dark:text-white bg-white/60 dark:bg-black/30 backdrop-blur-xl border border-gray-300 dark:border-white/20 shadow-md dark:shadow-[0_0_30px_rgba(0,0,0,0.3)] focus:outline-none focus:ring-2 focus:ring-black/30 dark:focus:ring-white/30 transition-all duration-300 placeholder-gray-500 dark:placeholder-gray-400"
             />
             <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
@@ -134,7 +182,7 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* Trending Movies Section */}
+      {/* Trending/Search Results Section */}
       <div className="container mx-auto px-4 py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -145,7 +193,7 @@ const HomePage = () => {
           <div className="flex items-center space-x-2 mb-8">
             <Film size={24} className="text-black dark:text-white" />
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Trending Now
+              {isSearching ? `Search Results for "${searchQuery}"` : 'Trending Now'}
             </h2>
           </div>
 
@@ -156,7 +204,11 @@ const HomePage = () => {
             error={error}
             onMovieClick={handleMovieClick}
             hasMore={currentPage < totalPages}
-            emptyMessage="No trending movies available at the moment. Please check back later."
+            emptyMessage={
+              isSearching
+                ? 'No search results found. Please try another keyword.'
+                : 'No trending movies available at the moment. Please check back later.'
+            }
           />
         </motion.div>
       </div>

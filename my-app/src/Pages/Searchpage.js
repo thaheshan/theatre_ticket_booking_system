@@ -12,6 +12,7 @@ const SearchPage = () => {
   const [genres, setGenres] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({});
+  const [sortOption, setSortOption] = useState('');
 
   const {
     searchResults,
@@ -26,34 +27,41 @@ const SearchPage = () => {
 
   useEffect(() => {
     const loadGenres = async () => {
-      try {
-        const genreList = await getGenres();
-        setGenres(genreList);
-      } catch (err) {
-        console.error('Failed to load genres', err);
-      }
+      const genreList = await getGenres();
+      setGenres(genreList);
     };
     loadGenres();
   }, []);
 
   useEffect(() => {
-    if (query && query !== searchQuery) {
-      setSearchQuery(query);
-      searchForMovies(query, filters);
-    } else if (!query && searchQuery) {
-      searchForMovies(searchQuery, filters);
-    }
-  }, [query, searchQuery, filters, searchForMovies, setSearchQuery]);
+    const delayDebounceFn = setTimeout(() => {
+      if (query && query !== searchQuery) {
+        setSearchQuery(query);
+        searchForMovies(query, { ...filters, sortBy: sortOption });
+      } else if (searchQuery) {
+        searchForMovies(searchQuery, { ...filters, sortBy: sortOption });
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [query, filters, sortOption, searchQuery, searchForMovies, setSearchQuery]);
 
   const handleLoadMore = () => {
     if (currentPage < totalPages) {
-      searchForMovies(searchQuery, filters, currentPage + 1);
+      searchForMovies(searchQuery, { ...filters, sortBy: sortOption }, currentPage + 1);
     }
   };
 
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
-    searchForMovies(searchQuery, newFilters);
+  };
+
+  const handleSortChange = (e) => {
+    const value = e.target.value;
+    setSortOption(value);
+
+    // Sync with filters state
+    setFilters((prevFilters) => ({ ...prevFilters, sortBy: value || undefined }));
   };
 
   return (
@@ -68,13 +76,28 @@ const SearchPage = () => {
                 : 'Search Results'}
             </h1>
           </div>
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-          >
-            <SlidersHorizontal size={18} />
-            <span>Filters</span>
-          </button>
+          <div className="flex items-center space-x-4">
+            <select
+              value={sortOption}
+              onChange={handleSortChange}
+              className="px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm text-gray-700 dark:text-white focus:outline-none"
+            >
+              <option value="">Sort By</option>
+              <option value="popularity.desc">Popularity ↓</option>
+              <option value="popularity.asc">Popularity ↑</option>
+              <option value="vote_average.desc">Rating ↓</option>
+              <option value="vote_average.asc">Rating ↑</option>
+              <option value="release_date.desc">Release Date ↓</option>
+              <option value="release_date.asc">Release Date ↑</option>
+            </select>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            >
+              <SlidersHorizontal size={18} />
+              <span>Filters</span>
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

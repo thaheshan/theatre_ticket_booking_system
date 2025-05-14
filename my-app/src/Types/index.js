@@ -49,8 +49,8 @@
  * @typedef {Object} Movie
  * @property {number} id
  * @property {string} title
- * @property {string} poster_path
- * @property {string} backdrop_path
+ * @property {string|null} poster_path
+ * @property {string|null} backdrop_path
  * @property {string} overview
  * @property {string} release_date
  * @property {number} vote_average

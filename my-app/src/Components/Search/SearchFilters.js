@@ -5,16 +5,7 @@ const SearchFilters = ({ genres, filters, onFilterChange }) => {
   const years = Array.from({ length: 50 }, (_, i) => currentYear - i);
 
   const handleChange = (key, value) => {
-    const newFilters = { ...filters, [key]: value };
-
-    // If the sort option is changed, apply it immediately
-    if (key === 'sortBy' && value) {
-      // Reset other filters when sorting to show all results in the new order
-      newFilters.genre = undefined;
-      newFilters.year = undefined;
-      newFilters.rating = undefined;
-    }
-
+    const newFilters = { ...filters, [key]: value || undefined };
     onFilterChange(newFilters);
   };
 
@@ -22,27 +13,11 @@ const SearchFilters = ({ genres, filters, onFilterChange }) => {
     <div className="bg-white dark:bg-gray-800 rounded-lg p-4 space-y-4">
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Sort By
-        </label>
-        <select
-          value={filters.sortBy || ''}
-          onChange={(e) => handleChange('sortBy', e.target.value || undefined)}
-          className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-white"
-        >
-          <option value="">Relevance</option>
-          <option value="popularity">Popularity</option>
-          <option value="rating">Rating</option>
-          <option value="release_date">Release Date</option>
-        </select>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Genre
         </label>
         <select
           value={filters.genre || ''}
-          onChange={(e) => handleChange('genre', Number(e.target.value) || undefined)}
+          onChange={(e) => handleChange('genre', Number(e.target.value))}
           className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-white"
         >
           <option value="">All Genres</option>
@@ -60,7 +35,7 @@ const SearchFilters = ({ genres, filters, onFilterChange }) => {
         </label>
         <select
           value={filters.year || ''}
-          onChange={(e) => handleChange('year', Number(e.target.value) || undefined)}
+          onChange={(e) => handleChange('year', Number(e.target.value))}
           className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-white"
         >
           <option value="">All Years</option>
@@ -78,7 +53,7 @@ const SearchFilters = ({ genres, filters, onFilterChange }) => {
         </label>
         <select
           value={filters.rating || ''}
-          onChange={(e) => handleChange('rating', Number(e.target.value) || undefined)}
+          onChange={(e) => handleChange('rating', Number(e.target.value))}
           className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-white"
         >
           <option value="">Any Rating</option>
