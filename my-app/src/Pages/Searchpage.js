@@ -1,111 +1,106 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
-import { searchMovies } from '../Services/Api';
+import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { Search as SearchIcon, SlidersHorizontal } from 'lucide-react';
+import { useMovies } from '../Context/MovieContext';
 import MovieGrid from '../Components/Movies/MovieGrid';
+import SearchFilters from '../Components/Search/SearchFilters';
+import { getGenres } from '../Services/Api';
 
 const SearchPage = () => {
-  const { query } = useParams();
-  const [movies, setMovies] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
-  const [error, setError] = useState(null);
-  const observer = useRef(null);
-  const loadingRef = useRef(null);
+  const [searchParams] = useSearchParams();
+  const query = searchParams.get('q') || '';
+  const [genres, setGenres] = useState([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({});
 
-  const searchForMovies = useCallback(async (searchQuery, pageNum, append = false) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await searchMovies(searchQuery, pageNum);
+  const {
+    searchResults,
+    searchQuery,
+    loading,
+    error,
+    searchForMovies,
+    setSearchQuery,
+    currentPage,
+    totalPages
+  } = useMovies();
 
-      if (append) {
-        setMovies(prev => [...prev, ...data.results]);
-      } else {
-        setMovies(data.results);
-        document.title = `Search: ${searchQuery} | MovieExplorer`;
+  useEffect(() => {
+    const loadGenres = async () => {
+      try {
+        const genreList = await getGenres();
+        setGenres(genreList);
+      } catch (err) {
+        console.error('Failed to load genres', err);
       }
-
-      setTotalPages(data.total_pages);
-    } catch (err) {
-      console.error('Error searching movies:', err);
-      setError('Failed to load search results. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+    };
+    loadGenres();
   }, []);
 
   useEffect(() => {
-    if (query) {
-      setPage(1);
-      searchForMovies(query, 1, false);
+    if (query && query !== searchQuery) {
+      setSearchQuery(query);
+      searchForMovies(query, filters);
+    } else if (!query && searchQuery) {
+      searchForMovies(searchQuery, filters);
     }
+  }, [query, searchQuery, filters, searchForMovies, setSearchQuery]);
 
-    return () => {
-      document.title = 'MovieExplorer';
-    };
-  }, [query, searchForMovies]);
-
-  useEffect(() => {
-    const handleObserver = (entries) => {
-      const [entry] = entries;
-      if (entry.isIntersecting && !loading && page < totalPages) {
-        setPage(prev => prev + 1);
-      }
-    };
-
-    observer.current = new IntersectionObserver(handleObserver, {
-      root: null,
-      threshold: 0.1,
-    });
-
-    if (loadingRef.current) {
-      observer.current.observe(loadingRef.current);
+  const handleLoadMore = () => {
+    if (currentPage < totalPages) {
+      searchForMovies(searchQuery, filters, currentPage + 1);
     }
+  };
 
-    return () => {
-      if (observer.current) {
-        observer.current.disconnect();
-      }
-    };
-  }, [loading, page, totalPages]);
-
-  useEffect(() => {
-    if (page > 1 && query) {
-      searchForMovies(query, page, true);
-    }
-  }, [page, query, searchForMovies]);
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters);
+    searchForMovies(searchQuery, newFilters);
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 pt-24">
       <div className="max-w-6xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
-          {movies.length ? (
-            `Search results for "${query}"`
-          ) : loading && page === 1 ? (
-            'Searching...'
-          ) : (
-            `No results found for "${query}"`
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-2">
+            <SearchIcon size={24} className="text-black dark:text-white" />
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              {searchQuery
+                ? `Search Results for "${searchQuery}"`
+                : 'Search Results'}
+            </h1>
+          </div>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          >
+            <SlidersHorizontal size={18} />
+            <span>Filters</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {showFilters && (
+            <div className="md:col-span-1">
+              <SearchFilters
+                genres={genres}
+                filters={filters}
+                onFilterChange={handleFilterChange}
+              />
+            </div>
           )}
-        </h1>
 
-        {error && (
-          <div className="bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-200 px-4 py-3 rounded mb-6">
-            {error}
+          <div className={showFilters ? 'md:col-span-3' : 'md:col-span-4'}>
+            <MovieGrid
+              movies={searchResults}
+              loading={loading}
+              error={error}
+              hasMore={currentPage < totalPages}
+              onLoadMore={handleLoadMore}
+              emptyMessage={searchQuery
+                ? `No results found for "${searchQuery}". Try adjusting your filters or search term.`
+                : 'Enter a search term to find movies.'}
+            />
           </div>
-        )}
-
-        <MovieGrid movies={movies} loading={loading && page === 1} />
-
-        {page < totalPages && (
-          <div ref={loadingRef} className="w-full py-8 flex justify-center">
-            {loading && page > 1 ? (
-              <div className="w-10 h-10 border-4 border-gray-300 border-t-gray-800 rounded-full animate-spin"></div>
-            ) : (
-              <p className="text-gray-500 dark:text-gray-400">Scroll for more results</p>
-            )}
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );

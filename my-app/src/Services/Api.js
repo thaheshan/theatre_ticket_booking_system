@@ -1,4 +1,3 @@
-// api.js
 import axios from 'axios';
 
 // ✅ TMDb API Config
@@ -31,12 +30,28 @@ export const fetchTrendingMovies = async (page = 1) => {
   }
 };
 
-// ✅ Search movies by query
-export const searchMovies = async (query, page = 1) => {
+// ✅ Search movies with filters
+export const searchMovies = async (query, filters = {}, page = 1) => {
   try {
-    const response = await api.get('/search/movie', {
-      params: { query, page },
-    });
+    const params = { query, page };
+
+    if (filters.year) {
+      params.primary_release_year = filters.year;
+    }
+
+    if (filters.rating) {
+      params.vote_average_gte = filters.rating;
+    }
+
+    if (filters.genre) {
+      params.with_genres = filters.genre;
+    }
+
+    if (filters.sortBy) {
+      params.sort_by = `${filters.sortBy}.desc`;
+    }
+
+    const response = await api.get('/search/movie', { params });
     return response.data;
   } catch (error) {
     console.error('Error searching movies:', error);
@@ -44,20 +59,27 @@ export const searchMovies = async (query, page = 1) => {
   }
 };
 
+// ✅ Fetch movie details (with credits, videos, and reviews)
 export const fetchMovieDetails = async (id) => {
   try {
-    const response = await api.get(`/movie/${id}`, {
-      params: {
-        append_to_response: 'videos,credits',
-      },
-    });
-    return response.data;
+    const [movieResponse, reviewsResponse] = await Promise.all([
+      api.get(`/movie/${id}`, {
+        params: {
+          append_to_response: 'credits,videos',
+        },
+      }),
+      api.get(`/movie/${id}/reviews`),
+    ]);
+
+    return {
+      ...movieResponse.data,
+      reviews: reviewsResponse.data.results,
+    };
   } catch (error) {
     console.error('Error fetching movie details:', error);
     throw new Error('Failed to fetch movie details');
   }
 };
-
 
 // ✅ Fetch all genres
 export const fetchGenres = async () => {

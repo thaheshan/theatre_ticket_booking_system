@@ -1,22 +1,81 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Heart, Star, Calendar, Clock, Users } from 'lucide-react';
+import { Heart, Star, Calendar, Clock, Users, MessageSquare } from 'lucide-react';
 import { useMovies } from '../../Context/MovieContext';
-import { fetchMovieDetails } from '../../Services/Api';
+import { useAuth } from '../../Context/AuthContext';
+import { fetchMovieDetails, getImageUrl } from '../../Services/Api';
+
+const CastMember = ({ cast }) => (
+  <div className="flex flex-col items-center text-center p-2">
+    <img
+      src={getImageUrl(cast.profile_path)}
+      alt={cast.name}
+      className="w-24 h-24 rounded-full object-cover mb-2"
+    />
+    <h4 className="font-medium text-white">{cast.name}</h4>
+    <p className="text-sm text-gray-400">{cast.character}</p>
+  </div>
+);
+
+const ReviewForm = ({ movieId, onSubmit }) => {
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit(rating, comment);
+    setComment('');
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-300">Rating</label>
+        <input
+          type="range"
+          min="1"
+          max="10"
+          value={rating}
+          onChange={(e) => setRating(Number(e.target.value))}
+          className="w-full"
+        />
+        <span className="text-white">{rating}/10</span>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-300">Comment</label>
+        <textarea
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          className="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white"
+          rows={4}
+        />
+      </div>
+      <button
+        type="submit"
+        className="px-4 py-2 bg-white text-black rounded-md hover:bg-gray-200 transition-colors"
+      >
+        Submit Review
+      </button>
+    </form>
+  );
+};
 
 const MovieDetails = () => {
   const { id } = useParams();
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [reviews, setReviews] = useState([]);
   const { addToFavorites, removeFromFavorites, isMovieFavorite } = useMovies();
+  const { isAuthenticated, user } = useAuth();
 
   useEffect(() => {
     const loadMovie = async () => {
       try {
         const data = await fetchMovieDetails(id);
         setMovie(data);
+        setReviews(data.reviews || []);
       } catch (err) {
         setError('Failed to load movie details.');
       } finally {
@@ -32,6 +91,7 @@ const MovieDetails = () => {
   if (!movie || !movie.id) return null;
 
   const isFavorite = isMovieFavorite(movie.id);
+  const cast = movie.credits?.cast || [];
 
   const releaseYear = movie.release_date
     ? new Date(movie.release_date).getFullYear()
@@ -51,6 +111,19 @@ const MovieDetails = () => {
     } else {
       addToFavorites(movie);
     }
+  };
+
+  const handleAddReview = (rating, comment) => {
+    const newReview = {
+      id: Date.now().toString(),
+      userId: user?.id || '',
+      movieId: movie.id,
+      rating,
+      comment,
+      createdAt: new Date().toISOString(),
+      username: user?.username || 'Anonymous',
+    };
+    setReviews([newReview, ...reviews]);
   };
 
   return (
@@ -128,7 +201,7 @@ const MovieDetails = () => {
             )}
 
             {movie.genres && movie.genres.length > 0 && (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 mb-6">
                 {movie.genres.map((genre) => (
                   <span
                     key={genre.id}
@@ -139,6 +212,47 @@ const MovieDetails = () => {
                 ))}
               </div>
             )}
+
+            {cast.length > 0 && (
+              <div className="mb-6">
+                <h2 className="text-2xl text-white font-semibold mb-4">Cast</h2>
+                <div className="flex overflow-x-auto gap-4">
+                  {cast.map((member) => (
+                    <CastMember key={member.id} cast={member} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div>
+              <h2 className="text-2xl text-white font-semibold mb-4 flex items-center gap-2">
+                <MessageSquare size={24} /> Reviews
+              </h2>
+
+              {isAuthenticated ? (
+                <ReviewForm movieId={movie.id} onSubmit={handleAddReview} />
+              ) : (
+                <p className="text-white/70">Please log in to leave a review.</p>
+              )}
+
+              <div className="mt-6 space-y-4">
+                {reviews.length > 0 ? (
+                  reviews.map((review) => (
+                    <div key={review.id} className="p-4 bg-white/10 rounded-md text-white">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-semibold">{review.username}</span>
+                        <span>{review.rating}/10</span>
+                      </div>
+                      <p className="text-white/80">{review.comment}</p>
+                      <p className="text-xs text-gray-400 mt-2">{new Date(review.createdAt).toLocaleString()}</p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-white/70">No reviews yet.</p>
+                )}
+              </div>
+            </div>
+
           </motion.div>
         </div>
       </div>
