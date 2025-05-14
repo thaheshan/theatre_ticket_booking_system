@@ -88,7 +88,10 @@ theatre_ticket_booking_system/
     ├── package.json
     └── tailwind.config.js
 📷 Screenshots
-Include some screenshots or GIFs of your app here!
+![Screenshot 2025-05-14 160805](https://github.com/user-attachments/assets/6d4f14b7-5b6b-4ec4-a6aa-ff773f091b5c)
+![Screenshot 2025-05-14 160749](https://github.com/user-attachments/assets/3ea8e664-5f08-4038-8bc4-01cb4a88bd18)
+![Screenshot 2025-05-14 160732](https://github.com/user-attachments/assets/b08d0172-9d5b-41d7-8a79-18febb4ed84a)
+![Screenshot 2025-05-14 160820](https://github.com/user-attachments/assets/bd217bde-46f6-4e3a-ab2e-7ae26776b419)
 
 🧩 Future Improvements
 🎟️ Add seat selection and ticket purchasing
@@ -108,17 +111,9 @@ This project is licensed under the MIT License.
 🙌 Acknowledgements
 TMDb API for movie data
 
-Tailwind CSS
 
-React
 
-yaml
-Copy
-Edit
 
----
-
-Let me know if you’d like me to include example `.env` files, screenshots, or a badge section at the top.
 
 
 
