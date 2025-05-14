@@ -35,6 +35,17 @@
  */
 
 /**
+ * @typedef {Object} Review
+ * @property {string} id
+ * @property {string} userId
+ * @property {number} movieId
+ * @property {number} rating
+ * @property {string} comment
+ * @property {string} createdAt
+ * @property {string} username
+ */
+
+/**
  * @typedef {Object} Movie
  * @property {number} id
  * @property {string} title
@@ -57,7 +68,8 @@
  *   },
  *   videos?: {
  *     results: Video[]
- *   }
+ *   },
+ *   reviews?: Review[]
  * }} MovieDetails
  */
 
@@ -67,4 +79,12 @@
  * @property {Movie[]} results
  * @property {number} total_pages
  * @property {number} total_results
+ */
+
+/**
+ * @typedef {Object} SearchFilters
+ * @property {number} [genre]
+ * @property {number} [year]
+ * @property {number} [rating]
+ * @property {'popularity' | 'rating' | 'release_date'} [sortBy]
  */
